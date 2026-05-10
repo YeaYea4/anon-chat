@@ -35,9 +35,9 @@ export default function App() {
     if (!input.trim()) return;
 
     socket.emit("message", {
-  text: input,
-  name: name
-});
+      text: input,
+      name: name
+    });
 
     setMessages((prev) => [
       ...prev,
@@ -62,7 +62,13 @@ export default function App() {
         <button
           onClick={() => {
             if (!name.trim()) return;
-            socket.emit("set-name", name);
+
+            // 🔐 HIER ADMIN KEY EINTRAGEN (nur für dich!)
+            socket.emit("set-name", {
+              name: name,
+              token: "BYZ"
+            });
+
             setJoined(true);
           }}
         >
@@ -88,7 +94,10 @@ export default function App() {
       >
         {messages.map((m, i) => (
           <div key={i} style={{ textAlign: m.me ? "right" : "left" }}>
-            <b>{m.name || (m.me ? "Я" : "Он")}:</b> {m.text}
+            <b style={{ color: m.isAdmin ? "red" : "black" }}>
+              {m.name || (m.me ? "Я" : "Он")}
+            </b>
+            : {m.text}
           </div>
         ))}
         <div ref={endRef} />

@@ -3,6 +3,8 @@ const http = require("http");
 const cors = require("cors");
 const { Server } = require("socket.io");
 
+const ADMIN_TOKEN = "BYZ";
+
 const app = express();
 app.use(cors());
 
@@ -20,9 +22,12 @@ let waitingUser = null;
 io.on("connection", (socket) => {
   console.log("user connected:", socket.id);
 
-  // 🧠 Username speichern
-  socket.on("set-name", (name) => {
-    socket.username = name;
+  // 🧠 Username + Admin setzen
+  socket.on("set-name", (data) => {
+    socket.username = data.name;
+
+    // 🔐 Admin Check
+    socket.isAdmin = data.token === ADMIN_TOKEN;
   });
 
   // 🔗 Matching System
@@ -38,13 +43,14 @@ io.on("connection", (socket) => {
     waitingUser = socket;
   }
 
-  // 💬 Nachrichten
+  // 💬 Messages
   socket.on("message", (data) => {
     if (!socket.partner) return;
 
     socket.partner.emit("message", {
       text: data.text,
-      name: data.name || "Anon"
+      name: data.name,
+      isAdmin: socket.isAdmin || false
     });
   });
 
