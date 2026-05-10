@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { io } from "socket.io-client";
 
-const socket = io("http://localhost:3001");
+const socket = io("https://anon-chat-1-kgt2.onrender.com");
 
 export default function App() {
   const [messages, setMessages] = useState([]);
