@@ -38,20 +38,24 @@ io.on("connection", (socket) => {
     waitingUser = socket;
   }
 
-  // 💬 Messages
-  socket.on("message", (msg) => {
-    if (socket.partner) {
-      socket.partner.emit("message", {
-        text: msg,
-        name: socket.username || "Anon"
-      });
-    }
+  // 💬 Nachrichten
+  socket.on("message", (data) => {
+    if (!socket.partner) return;
+
+    socket.partner.emit("message", {
+      text: data.text,
+      name: data.name || "Anon"
+    });
   });
 
-  // ❌ Disconnect
+  // ❌ Disconnect Handling
   socket.on("disconnect", () => {
     if (waitingUser === socket) waitingUser = null;
-    if (socket.partner) socket.partner.emit("partner-left");
+
+    if (socket.partner) {
+      socket.partner.emit("partner-left");
+      socket.partner.partner = null;
+    }
   });
 });
 

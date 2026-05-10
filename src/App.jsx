@@ -34,7 +34,10 @@ export default function App() {
   const sendMessage = () => {
     if (!input.trim()) return;
 
-    socket.emit("message", input);
+    socket.emit("message", {
+  text: input,
+  name: name
+});
 
     setMessages((prev) => [
       ...prev,
