@@ -8,6 +8,9 @@ export default function App() {
   const [input, setInput] = useState("");
   const [status, setStatus] = useState("Поиск собеседника...");
 
+  const [name, setName] = useState("");
+  const [joined, setJoined] = useState(false);
+
   const endRef = useRef(null);
 
   useEffect(() => {
@@ -16,7 +19,7 @@ export default function App() {
     });
 
     socket.on("message", (msg) => {
-      setMessages((prev) => [...prev, { text: msg, me: false }]);
+      setMessages((prev) => [...prev, msg]);
     });
 
     socket.on("partner-left", () => {
@@ -32,9 +35,39 @@ export default function App() {
     if (!input.trim()) return;
 
     socket.emit("message", input);
-    setMessages((prev) => [...prev, { text: input, me: true }]);
+
+    setMessages((prev) => [
+      ...prev,
+      { text: input, name: name, me: true }
+    ]);
+
     setInput("");
   };
+
+  // 🔴 LOGIN SCREEN
+  if (!joined) {
+    return (
+      <div style={{ padding: 20, fontFamily: "Arial" }}>
+        <h2>Enter Username</h2>
+
+        <input
+          placeholder="Dein Name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
+
+        <button
+          onClick={() => {
+            if (!name.trim()) return;
+            socket.emit("set-name", name);
+            setJoined(true);
+          }}
+        >
+          Start Chat
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div style={{ padding: 20, fontFamily: "Arial" }}>
@@ -42,10 +75,17 @@ export default function App() {
 
       <p>{status}</p>
 
-      <div style={{ height: 300, overflow: "auto", border: "1px solid #ccc" }}>
+      <div
+        style={{
+          height: 300,
+          overflow: "auto",
+          border: "1px solid #ccc",
+          padding: 10
+        }}
+      >
         {messages.map((m, i) => (
           <div key={i} style={{ textAlign: m.me ? "right" : "left" }}>
-            <b>{m.me ? "Я" : "Он"}:</b> {m.text}
+            <b>{m.name || (m.me ? "Я" : "Он")}:</b> {m.text}
           </div>
         ))}
         <div ref={endRef} />

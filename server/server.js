@@ -7,8 +7,12 @@ const app = express();
 app.use(cors());
 
 const server = http.createServer(app);
+
 const io = new Server(server, {
-  cors: { origin: "*" }
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"]
+  }
 });
 
 let waitingUser = null;
@@ -16,6 +20,12 @@ let waitingUser = null;
 io.on("connection", (socket) => {
   console.log("user connected:", socket.id);
 
+  // 🧠 Username speichern
+  socket.on("set-name", (name) => {
+    socket.username = name;
+  });
+
+  // 🔗 Matching System
   if (waitingUser) {
     socket.partner = waitingUser;
     waitingUser.partner = socket;
@@ -28,12 +38,17 @@ io.on("connection", (socket) => {
     waitingUser = socket;
   }
 
+  // 💬 Messages
   socket.on("message", (msg) => {
     if (socket.partner) {
-      socket.partner.emit("message", msg);
+      socket.partner.emit("message", {
+        text: msg,
+        name: socket.username || "Anon"
+      });
     }
   });
 
+  // ❌ Disconnect
   socket.on("disconnect", () => {
     if (waitingUser === socket) waitingUser = null;
     if (socket.partner) socket.partner.emit("partner-left");
